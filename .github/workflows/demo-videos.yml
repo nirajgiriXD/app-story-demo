@@ -1,0 +1,35 @@
+name: Demo videos
+
+# Checks the saved AppStory plans still work on the site, then makes their videos again.
+# Needs at least one saved plan in apps/tasky.plans/: make it locally with `app-story tasky`
+# and commit it. Until then this workflow fails, saying so.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  videos:
+    runs-on: ubuntu-latest # the action needs Docker
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Serve the site on localhost:8080
+        run: |
+          python3 -m http.server 8080 > /dev/null 2>&1 &
+          for i in $(seq 1 50); do curl -sf http://localhost:8080/ > /dev/null && break; sleep 0.2; done
+
+      - name: Check the saved plans still work
+        uses: nirajgiriXD/app-story@main
+        with:
+          products: tasky
+          command: test
+
+      - name: Make the videos again
+        uses: nirajgiriXD/app-story@main
+        with:
+          products: tasky
